@@ -1,6 +1,6 @@
-:root {
+/* :root {
   --text: #6b6375;
-  --text-h: #08060d;
+  --text-h: hsl(257, 37%, 4%);
   --bg: #fff;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
@@ -51,11 +51,10 @@
 }
 
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  margin: 0;
+  text-align: left;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -108,4 +107,4 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
-}
+} */
