@@ -20,7 +20,7 @@ return (
     <button 
       className="nav-button"
       onClick={() => navigate(
-        `/mp2/movie/${sortedMovie[index - 1].id}`,
+        `/movie/${sortedMovie[index - 1].id}`,
         {
           state: {
             index: index-1,
@@ -41,7 +41,7 @@ return (
     <button 
       className="nav-button"
       onClick={() => navigate(
-        `/mp2/movie/${sortedMovie[index + 1].id}`,
+        `/movie/${sortedMovie[index + 1].id}`,
         {
           state: {
             index: index+1,
@@ -83,7 +83,7 @@ function DetailCard(){
 
       <div className = "buttons">
         <BackButton index={location.state?.index} sortedMovie={location.state?.sortedMovie}/>
-        <button className="nav-button" onClick={() => navigate('/mp2')}>Home</button>
+        <button className="nav-button" onClick={() => navigate('/')}>Home</button>
         <ForwardButton index={location.state?.index} sortedMovie={location.state?.sortedMovie} />
       </div>
 
@@ -123,7 +123,7 @@ function Card({movie, index, sortedMovie}: {movie: Movie, index: number, sortedM
           <p>Release Date: {movie.release_date}</p>
           <p>Rating: {movie.vote_average.toFixed(1)}</p>
         </div>
-        <Link to={`/mp2/movie/${movie.id}`} state={{
+        <Link to={`/movie/${movie.id}`} state={{
           index: index,
           sortedMovie: sortedMovie
         }}>Read the Synopsis</Link>
@@ -287,11 +287,11 @@ function MovieDetail() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       {/* Routes */}
       <Routes>
-        <Route path="mp2/" element={<Home />} />
-        <Route path="mp2/movie/:id" element={<MovieDetail/>} />
+        <Route path="/" element={<Home />} />
+        <Route path="/movie/:id" element={<MovieDetail/>} />
       </Routes>
     </BrowserRouter>
   );
