@@ -201,6 +201,9 @@ function Home() {
     .then((response) => {
       console.log("API RESPONSE:", response.data);
       setData(response.data.results);
+      console.log(
+  response.data.results.map((movie: Movie) => movie.release_date)
+);
     })
     .catch((err) => {
       console.error("API ERROR:", err);
@@ -242,10 +245,10 @@ function Home() {
               >
                 <option value="">All Years</option>
                 <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="1985">1985</option>
+                {/* <option value="2023">2023</option>
+                <option value="2022">2022</option> */}
               </select>
             </div>
             <div>
