@@ -1,14 +1,8 @@
 import './App.css'
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 
-
-
-type Fruit = {
-  name: string;
-  image: string;
-  description: string;
-};
 
 type Movie = {
   id: number;
@@ -19,37 +13,129 @@ type Movie = {
   vote_average: number;
 };
 
-function Card({movie}: {movie: Movie}){
+function BackButton({index, sortedMovie}: {index: number, sortedMovie: Movie[]}) {
+  const navigate = useNavigate();
+
+return (
+    <button 
+      className="nav-button"
+      onClick={() => navigate(
+        `/mp2/movie/${sortedMovie[index - 1].id}`,
+        {
+          state: {
+            index: index-1,
+            sortedMovie: sortedMovie
+          }
+        }
+      )}
+    >
+      <span>←</span> Back 
+    </button>
+  );
+}
+
+function ForwardButton({index, sortedMovie}: {index: number, sortedMovie: Movie[]}) {
+  const navigate = useNavigate();
+
+return (
+    <button 
+      className="nav-button"
+      onClick={() => navigate(
+        `/mp2/movie/${sortedMovie[index + 1].id}`,
+        {
+          state: {
+            index: index+1,
+            sortedMovie: sortedMovie
+          }
+        }
+      )}
+    >
+      <span>→</span> Forward 
+    </button>
+  );
+}
+
+function DetailCard(){
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [data, setData] = useState<Movie>();
+
+  useEffect(() => {
+    axios.get(`https://api.themoviedb.org/3/movie/${id}`, {
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`
+      }
+    })
+    .then((response) => {
+      console.log("API RESPONSE:", response.data);
+      setData(response.data);
+    })
+    .catch((err) => {
+      console.error("API ERROR:", err);
+    });
+  }, [id]); 
+
+  const location = useLocation();
+
+  return (
+    
+    <div className="detail-card-total">
+
+      <div className = "buttons">
+        <BackButton index={location.state?.index} sortedMovie={location.state?.sortedMovie}/>
+        <button className="nav-button" onClick={() => navigate('/mp2')}>Home</button>
+        <ForwardButton index={location.state?.index} sortedMovie={location.state?.sortedMovie} />
+      </div>
+
+      <section className="detail-card">
+        <div className="poster">
+          <img
+            src={`https://image.tmdb.org/t/p/w500${data?.poster_path}`}
+            alt={data?.title}
+          />
+        </div>
+        <section className="movie-info">
+          <h2>{data?.title}</h2>
+          <p>Release Date: {data?.release_date}</p>
+          <p>Rating: {data?.vote_average.toFixed(1)}</p>
+          <p>{data?.overview}</p>
+        </section>
+      </section>
+      
+    </div>
+
+  );
+}
+
+function Card({movie, index, sortedMovie}: {movie: Movie, index: number, sortedMovie: Movie[]}){
   return (
     <div className = "card">
-      <div className="poster">
+      <section className="poster">
         <img
         src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
         alt={movie.title}
-      />
-      </div>
-      <div className = "movie-info">
-        <h2>{movie.title}</h2>
-        <p>{movie.release_date}</p>
-        <p>Rating: {movie.vote_average.toFixed(1)}</p>
-        <p>{movie.overview}</p> 
-      </div>
+        />
+      </section>
+
+      <section className = "movie-info">
+        <div>
+          <h2>{movie.title}</h2>
+          <p>Release Date: {movie.release_date}</p>
+          <p>Rating: {movie.vote_average.toFixed(1)}</p>
+        </div>
+        <Link to={`/mp2/movie/${movie.id}`} state={{
+          index: index,
+          sortedMovie: sortedMovie
+        }}>Read the Synopsis</Link>
+      </section>
     </div>
   );
 }
 
-function App() {
-  console.log("HELLO FROM APP");
-  
-  const [layout, setLayout] = useState("grid");
-  const [sortOption, setSortOption] = useState("");
-  const [data, setData] = useState<Movie[]>([]);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [yearFilter, setYearFilter] = useState("");
-  const [rankFilter, setRankFilter] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
 
-  
+
+function OrderMovies(data: Movie[], searchTerm: string, yearFilter: string, rankFilter: string, sortOption: string){
+
   const searchFilteredMovie = data.filter((movie) =>
     movie.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -87,6 +173,22 @@ function App() {
     } 
 
   }); 
+  return sortedMovie;
+}
+
+function Home() {
+
+  console.log("HELLO FROM APP");
+  
+  const [layout, setLayout] = useState("grid");
+  const [sortOption, setSortOption] = useState("");
+  const [data, setData] = useState<Movie[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [yearFilter, setYearFilter] = useState("");
+  const [rankFilter, setRankFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const sortedMovie = OrderMovies(data, searchTerm, yearFilter, rankFilter, sortOption);
 
   useEffect(() => {
     console.log("useEffect is running");
@@ -103,7 +205,7 @@ function App() {
     .catch((err) => {
       console.error("API ERROR:", err);
     });
-    
+
   }, []);
 
   return (
@@ -111,48 +213,13 @@ function App() {
       <section className="header">
         <h1>Top Rated Movies</h1>
       </section>
+
       <section className="options">
         <button className="organize" onClick={() => setLayout("list")}>List</button>
         <button className="organize" onClick={() => setLayout("grid")}>Gallery</button>
         <input type="text" placeholder="Search.." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         <button className="filter" onClick={() => setFilterOpen(!filterOpen)}>Filter</button>
-      </section>
-      <section className="filter-section">
-        {filterOpen && (
-          <div className="filter-menu">
-            <label htmlFor="year-filter">Release Year: </label>
-
-            <select
-              id="year-filter"
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-            >
-              <option value="">All Years</option>
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-            </select>
-            <label htmlFor="rank-filter">Ranking: </label>
-
-            <select
-              id="rank-filter"
-              value={rankFilter}
-              onChange={(e) => setRankFilter(e.target.value)}
-            >
-              <option value="">All Stars</option>
-              <option value="10">10 Stars</option>
-              <option value="9">9 Stars or higher</option>
-              <option value="8">8 Stars or higher</option>
-              <option value="7">7 Stars or higher</option>
-              <option value="6">6 Stars or higher</option>
-            </select>
-          </div>
-        )}
-      </section>
-      <section className="sort-section">
-        <h3 className="filter">Sort:</h3>
+        <p className="filter">Sort:</p>
           <select name="sort-options" id="sort-options" value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
             <option value="a-z">A-Z</option>
             <option value="z-a">Z-A</option>
@@ -162,15 +229,73 @@ function App() {
             <option value="rank-desc">Rank Descending</option>
           </select>
       </section>
-        
+      
+      <section className="options">
+        {filterOpen && (
+          <div className="filter-menu">
+            <div>
+              <label htmlFor="year-filter">Release Year: </label>
+              <select
+                id="year-filter"
+                value={yearFilter}
+                onChange={(e) => setYearFilter(e.target.value)}
+              >
+                <option value="">All Years</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="rank-filter">Ranking: </label>
 
+              <select
+                id="rank-filter"
+                value={rankFilter}
+                onChange={(e) => setRankFilter(e.target.value)}
+              >
+                <option value="">All Stars</option>
+                <option value="10">10 Stars</option>
+                <option value="9">9 Stars or higher</option>
+                <option value="8">8 Stars or higher</option>
+                <option value="7">7 Stars or higher</option>
+                <option value="6">6 Stars or higher</option>
+              </select>
+            </div>
+            
+          </div>
+        )}
+      </section>
       <section className = "movie-cards">
         <div className={`movie-layout ${layout}`}>
-            {sortedMovie.map((movie) => (<Card key={movie.id} movie={movie} />))}
+            {sortedMovie.map((movie, index) => (<Card key={movie.id} movie={movie} index={index} sortedMovie={sortedMovie}/>))}
         </div>
       </section>
     </>
   )
+}
+
+function MovieDetail() {
+  return (
+    <div>
+      <DetailCard/>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      {/* Routes */}
+      <Routes>
+        <Route path="mp2/" element={<Home />} />
+        <Route path="mp2/movie/:id" element={<MovieDetail/>} />
+      </Routes>
+    </BrowserRouter>
+  );
+  
 }
 
 export default App
